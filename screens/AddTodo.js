@@ -14,6 +14,8 @@ import { addTodoReducer } from "../features/todosSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
+import { compose } from "redux";
 
 export default function AddTodo() {
   const dispatch = useDispatch();
@@ -21,8 +23,9 @@ export default function AddTodo() {
   const [name, setName] = useState("");
   const [date, setDate] = useState(new Date());
   const [isToday, setIsToday] = useState(false);
-  const listTodos = useSelector((state) => state.todos.todos)
-  console.log(listTodos)
+  const [withAlert, setWithAlert] = useState(false);
+  const listTodos = useSelector((state) => state.todos.todos);
+  console.log(listTodos);
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate;
     setDate(currentDate);
@@ -31,19 +34,21 @@ export default function AddTodo() {
     const newTodo = {
       id: Math.floor(Math.random() * 10000000),
       text: name,
-      hour: date.toString(),
+      hour: isToday ? date.toISOString() : moment(date).add(1, "day"),
       isToday: isToday,
       isCompleted: false,
     };
-    console.log(newTodo)
     const parse = [...listTodos, newTodo];
     try {
       dispatch(addTodoReducer(newTodo));
       await AsyncStorage.setItem("@Todos", JSON.stringify(parse));
       console.log("succesfully");
+      if (withAlert) {
+        await scheduleTodoNotifications(newTodo);
+      }
       navigation.goBack();
     } catch (error) {
-      console.log(error,"error create");
+      console.log(error, "error create");
     }
   };
 
@@ -58,6 +63,21 @@ export default function AddTodo() {
   const showTimepicker = () => {
     showMode("time");
   };
+  const scheduleTodoNotifications = async (todo) => {
+    const trigger = new Date(todo.hour);
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "It's time!",
+          body: todo.text,
+        },
+        trigger,
+      });
+      console.log("created")
+    } catch (error) {
+      alert("The notificacion failed to schedule, make sure the hour is valid");
+    }
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add task</Text>
@@ -67,7 +87,7 @@ export default function AddTodo() {
           style={styles.textInput}
           placeholder="Task"
           placeholderTextColor="#00000030"
-          onChangeText={(text)=> setName(text)}
+          onChangeText={(text) => setName(text)}
         ></TextInput>
       </View>
       <View style={styles.inputContainer}>
@@ -76,21 +96,31 @@ export default function AddTodo() {
           style={{ flexDirection: "row" }}
           onPress={showTimepicker}
         >
-          <Text style={styles.textTime}>
-          {moment(date).format("LT")}
-          </Text>
+          <Text style={styles.textTime}>{moment(date).format("LT")}</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.inputContainer}>
+      <View style={styles.switchContainer}>
         <Text style={styles.inputTitle}>Today</Text>
         <Switch value={isToday} onValueChange={(value) => setIsToday(value)} />
       </View>
-      <TouchableOpacity style={styles.button} onPress={()=> addTodo()}>
-        <Text style={{ color: "white" }}>Done!</Text>
-      </TouchableOpacity>
       <Text style={{ color: "gray" }}>
         If you disable "Today", the task will be considered as "Tomorrow"
       </Text>
+      <View style={[styles.switchContainer, { alignItems: "center" }]}>
+        <View>
+          <Text style={styles.inputTitle}>Alert</Text>
+        </View>
+        <Switch
+          value={withAlert}
+          onValueChange={(value) => setWithAlert(value)}
+        />
+      </View>
+      <Text style={{ color: "gray" }}>
+        You will receive an alert at the time you set for this reminder
+      </Text>
+      <TouchableOpacity style={styles.button} onPress={() => addTodo()}>
+        <Text style={{ color: "#fff" }}>Done!</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -106,6 +136,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingBottom: 30,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
   },
   title: {
     fontSize: 34,
