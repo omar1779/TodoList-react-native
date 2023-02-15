@@ -1,11 +1,11 @@
 import React from "react";
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { updateTodoReducer } from "../features/todosSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function Checkbox({ id, text, isCompleted, isToday, hour }) {
+export default function Checkbox({ id, isCompleted, isToday,}) {
   const dispatch = useDispatch();
   const listTodos = useSelector((state) => state.todos.todos);
   const handleCheckbox = () => {

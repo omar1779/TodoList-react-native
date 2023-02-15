@@ -2,6 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Home from "./screens/Home";
 import AddTodo from "./screens/AddTodo";
+import Login from "./screens/Login";
 const Stack = createNativeStackNavigator();
 import { store } from "./app/store";
 import { Provider } from "react-redux";
@@ -10,6 +11,11 @@ export default function App() {
     <Provider store={store}>
       <NavigationContainer>
         <Stack.Navigator>
+        <Stack.Screen
+            name="Login"
+            component={Login}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen
             name="Home"
             component={Home}

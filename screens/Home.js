@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   Platform,
+  StatusBar,
 } from "react-native";
 import TodoList from "../components/TodoList";
 import { useState, useEffect } from "react";
@@ -35,13 +36,16 @@ export default function Home() {
       if (todosStorage !== null) {
         const todosData = JSON.parse(todosStorage);
         const todoDataFiltered = await todosData.filter((todo) => {
-          return moment(todo.hour).isSameOrAfter(moment(), 'day');
+          return moment(todo.hour).isSameOrAfter(moment(), "day");
         });
-        console.log(todoDataFiltered, "filtro")
-        if(todoDataFiltered !== null){
-          await AsyncStorage.setItem("@todos",JSON.stringify(todoDataFiltered))
+        console.log(todoDataFiltered, "filtro");
+        if (todoDataFiltered !== null) {
+          await AsyncStorage.setItem(
+            "@todos",
+            JSON.stringify(todoDataFiltered)
+          );
           dispatch(setTodosReducer(todoDataFiltered));
-          console.log("we delete some passed todos")
+          console.log("we delete some passed todos");
         }
       }
     } catch (error) {
@@ -96,33 +100,46 @@ export default function Home() {
     }
     return token;
   };
-  const todayTodos = todos.filter(todos => moment(todos.hour).isSame(moment(), 'day'));
-  const tomorrowTodos = todos.filter(todos => moment(todos.hour).isAfter(moment(), 'day'));
+  const todayTodos = todos.filter((todos) =>
+    moment(todos.hour).isSame(moment(), "day")
+  );
+  const tomorrowTodos = todos.filter((todos) =>
+    moment(todos.hour).isAfter(moment(), "day")
+  );
   return (
     <View style={styles.container}>
-      <Image
-        style={styles.pic}
-        source={{
-          uri: "https://i.pinimg.com/236x/08/9b/5a/089b5aee55ee68c537466e798b0ae3f1.jpg",
-        }}
-      />
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Text style={styles.title}>Today</Text>
-        <TouchableOpacity onPress={handleHidePress}>
-          <Text style={{ color: "#3478f6" }}>
-            {isHidden ? "Show Completed" : "Hide Completed"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <TodoList todoData={todayTodos} />
-      <Text style={styles.title}>Tomorrow</Text>
-      <TodoList todoData={tomorrowTodos} />
+      <StatusBar barStyle={"dark-content"} backgroundColor={"#fff"} />
+      {todos.length === 0 ? (
+        <Text>No tienes ningun todo</Text>
+      ) : (
+        <View>
+          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            <Image
+              style={styles.pic}
+              source={{
+                uri: "https://i.pinimg.com/236x/08/9b/5a/089b5aee55ee68c537466e798b0ae3f1.jpg",
+              }}
+            />
+          </TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={styles.title}>Today</Text>
+            <TouchableOpacity onPress={handleHidePress}>
+              <Text style={{ color: "#3478f6" }}>
+                {isHidden ? "Show Completed" : "Hide Completed"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <TodoList todoData={todayTodos} />
+          <Text style={styles.title}>Tomorrow</Text>
+          <TodoList todoData={tomorrowTodos} />
+        </View>
+      )}
       <TouchableOpacity
         onPress={() => navigation.navigate("Add")}
         style={styles.button}
